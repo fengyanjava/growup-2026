@@ -1,20 +1,22 @@
 package com.example.android_basic
 
 import android.os.Bundle
+import android.content.Intent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.android_basic.core.ui.applySystemBarInsets
+import com.example.android_basic.databinding.ActivityMainBinding
+import com.example.android_basic.feature.mvvm.ui.PostListActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.root.applySystemBarInsets()
+        binding.openMvvmButton.setOnClickListener {
+            startActivity(Intent(this, PostListActivity::class.java))
         }
     }
 }

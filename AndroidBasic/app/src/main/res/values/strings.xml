@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">Android-Basic</string>
+    <string name="home_title">Android 功能演示</string>
+    <string name="home_description">每个示例独立分包，从这里进入体验。</string>
+    <string name="mvvm_title">MVVM · 文章列表</string>
+    <string name="mvvm_description">ViewModel + 协程 + LiveData + Retrofit\n真实网络请求，体验加载、刷新和失败重试。旋转屏幕后保留状态。</string>
+    <string name="open_mvvm">打开 MVVM 示例</string>
+    <string name="posts_source">数据来自 JSONPlaceholder\nGET https://jsonplaceholder.typicode.com/posts</string>
+    <string name="back">返回</string>
+    <string name="refresh">刷新</string>
+    <string name="retry">重新请求</string>
+    <string name="posts_loading">正在加载文章…</string>
+    <string name="posts_loaded">已加载 %1$d 篇文章</string>
+    <string name="posts_empty_status">暂无文章</string>
+    <string name="posts_empty">还没有文章，点击刷新再试一次。</string>
+    <string name="posts_error_status">加载失败</string>
+    <string name="posts_network_error">网络连接失败或请求超时，请检查网络后重试。</string>
+    <string name="posts_server_error">服务器返回错误，请稍后重试。</string>
+    <string name="posts_unknown_error">加载文章时出现异常，请重试。</string>
+    <string name="post_meta">文章 #%1$d · 用户 %2$d</string>
 </resources>

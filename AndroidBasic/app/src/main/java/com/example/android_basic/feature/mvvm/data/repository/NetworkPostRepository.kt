@@ -1,0 +1,9 @@
+package com.example.android_basic.feature.mvvm.data.repository
+
+import com.example.android_basic.feature.mvvm.data.model.Post
+import com.example.android_basic.feature.mvvm.data.remote.PostApi
+
+class NetworkPostRepository(private val api: PostApi) : PostRepository {
+    // Retrofit 的挂起调用本身不阻塞主线程，无需再包 Dispatchers.IO。
+    override suspend fun getPosts(): List<Post> = api.getPosts()
+}
