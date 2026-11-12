@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.android_basic.R
+import com.example.android_basic.core.network.NetworkError
 import com.example.android_basic.core.ui.applySystemBarInsets
 import com.example.android_basic.databinding.ActivityMvvmPostsBinding
 import com.example.android_basic.feature.mvvm.MvvmDependencies
@@ -55,9 +56,9 @@ class PostListActivity : AppCompatActivity() {
             PostUiState.Empty -> messageText.setText(R.string.posts_empty)
             is PostUiState.Error -> messageText.setText(
                 when (state.reason) {
-                    PostError.NETWORK -> R.string.posts_network_error
-                    PostError.SERVER -> R.string.posts_server_error
-                    PostError.UNKNOWN -> R.string.posts_unknown_error
+                    NetworkError.NETWORK -> R.string.posts_network_error
+                    NetworkError.HTTP -> R.string.posts_server_error
+                    NetworkError.UNKNOWN -> R.string.posts_unknown_error
                 }
             )
             PostUiState.Loading -> Unit

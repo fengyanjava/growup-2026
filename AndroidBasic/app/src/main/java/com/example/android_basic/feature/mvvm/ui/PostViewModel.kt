@@ -5,12 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.android_basic.core.network.NetworkResult
 import com.example.android_basic.feature.mvvm.data.repository.PostRepository
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
 
 class PostViewModel(private val repository: PostRepository) : ViewModel() {
     private val _uiState = MutableLiveData<PostUiState>(PostUiState.Loading)
@@ -29,22 +27,17 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
         loadJob = viewModelScope.launch {
             _uiState.value = PostUiState.Loading
-            try {
-                val posts = repository.getPosts()
-                _uiState.value = if (posts.isEmpty()) {
-                    PostUiState.Empty
-                } else {
-                    PostUiState.Success(posts)
+            // Repository 统一处理请求异常，这里只将数据结果转换为页面状态。
+            _uiState.value = when (val result = repository.getPosts()) {
+                is NetworkResult.Success -> {
+                    val posts = result.data
+                    if (posts.isEmpty()) {
+                        PostUiState.Empty
+                    } else {
+                        PostUiState.Success(posts)
+                    }
                 }
-            } catch (cancelled: CancellationException) {
-                // 页面永久退出时 viewModelScope 会取消，不能把取消当成请求失败。
-                throw cancelled
-            } catch (_: IOException) {
-                _uiState.value = PostUiState.Error(PostError.NETWORK)
-            } catch (_: HttpException) {
-                _uiState.value = PostUiState.Error(PostError.SERVER)
-            } catch (_: Exception) {
-                _uiState.value = PostUiState.Error(PostError.UNKNOWN)
+                is NetworkResult.Failure -> PostUiState.Error(result.error)
             }
         }
     }

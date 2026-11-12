@@ -3,6 +3,8 @@ package com.example.android_basic.feature.mvvm.ui
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
+import com.example.android_basic.core.network.NetworkError
+import com.example.android_basic.core.network.NetworkResult
 import com.example.android_basic.feature.mvvm.data.model.Post
 import com.example.android_basic.feature.mvvm.data.repository.PostRepository
 import kotlinx.coroutines.CancellationException
@@ -16,7 +18,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -24,9 +25,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import retrofit2.HttpException
-import retrofit2.Response
-import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostViewModelTest {
@@ -49,8 +47,8 @@ class PostViewModelTest {
     }
 
     @Test
-    fun `initial request exposes loading then real repository result`() = runTest(dispatcher) {
-        val viewModel = createViewModel(FakeRepository { posts })
+    fun `initial request exposes loading then repository result`() = runTest(dispatcher) {
+        val viewModel = createViewModel(FakeRepository { NetworkResult.Success(posts) })
         assertEquals(PostUiState.Loading, viewModel.uiState.value)
 
         advanceUntilIdle()
@@ -60,19 +58,19 @@ class PostViewModelTest {
 
     @Test
     fun `empty response exposes empty state`() = runTest(dispatcher) {
-        val viewModel = createViewModel(FakeRepository { emptyList() })
+        val viewModel = createViewModel(FakeRepository { NetworkResult.Success(emptyList()) })
         advanceUntilIdle()
         assertEquals(PostUiState.Empty, viewModel.uiState.value)
     }
 
     @Test
     fun `network failure can be retried successfully`() = runTest(dispatcher) {
-        val repository = FakeRepository { throw IOException("offline") }
+        val repository = FakeRepository { NetworkResult.Failure(NetworkError.NETWORK) }
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
-        assertEquals(PostUiState.Error(PostError.NETWORK), viewModel.uiState.value)
+        assertEquals(PostUiState.Error(NetworkError.NETWORK), viewModel.uiState.value)
 
-        repository.result = { posts }
+        repository.result = { NetworkResult.Success(posts) }
         viewModel.loadPosts()
         runCurrent()
 
@@ -81,25 +79,27 @@ class PostViewModelTest {
     }
 
     @Test
-    fun `HTTP error exposes server failure`() = runTest(dispatcher) {
+    fun `HTTP error exposes shared HTTP failure`() = runTest(dispatcher) {
         val viewModel = createViewModel(FakeRepository {
-            throw HttpException(Response.error<List<Post>>(503, "unavailable".toResponseBody()))
+            NetworkResult.Failure(NetworkError.HTTP)
         })
         advanceUntilIdle()
-        assertEquals(PostUiState.Error(PostError.SERVER), viewModel.uiState.value)
+        assertEquals(PostUiState.Error(NetworkError.HTTP), viewModel.uiState.value)
     }
 
     @Test
     fun `unexpected failure exposes generic error`() = runTest(dispatcher) {
-        val viewModel = createViewModel(FakeRepository { throw IllegalStateException("bad data") })
+        val viewModel = createViewModel(FakeRepository {
+            NetworkResult.Failure(NetworkError.UNKNOWN)
+        })
         advanceUntilIdle()
-        assertEquals(PostUiState.Error(PostError.UNKNOWN), viewModel.uiState.value)
+        assertEquals(PostUiState.Error(NetworkError.UNKNOWN), viewModel.uiState.value)
     }
 
     @Test
     fun `repeated refresh during request does not issue extra requests`() = runTest(dispatcher) {
         val response = CompletableDeferred<List<Post>>()
-        val repository = FakeRepository { response.await() }
+        val repository = FakeRepository { NetworkResult.Success(response.await()) }
         val viewModel = createViewModel(repository)
         runCurrent()
 
@@ -115,12 +115,12 @@ class PostViewModelTest {
 
     @Test
     fun `refresh after success fetches latest posts`() = runTest(dispatcher) {
-        val repository = FakeRepository { posts }
+        val repository = FakeRepository { NetworkResult.Success(posts) }
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
 
         val updated = posts.map { it.copy(title = "Updated title") }
-        repository.result = { updated }
+        repository.result = { NetworkResult.Success(updated) }
         viewModel.loadPosts()
         advanceUntilIdle()
 
@@ -130,7 +130,7 @@ class PostViewModelTest {
 
     @Test
     fun `retained ViewModelStore reuses state without another request`() = runTest(dispatcher) {
-        val repository = FakeRepository { posts }
+        val repository = FakeRepository { NetworkResult.Success(posts) }
         val original = createViewModel(repository)
         advanceUntilIdle()
 
@@ -166,11 +166,13 @@ class PostViewModelTest {
     private fun createViewModel(repository: PostRepository): PostViewModel =
         ViewModelProvider(store, PostViewModel.Factory(repository))[PostViewModel::class.java]
 
-    private class FakeRepository(var result: suspend () -> List<Post>) : PostRepository {
+    private class FakeRepository(
+        var result: suspend () -> NetworkResult<List<Post>>
+    ) : PostRepository {
         var calls = 0
             private set
 
-        override suspend fun getPosts(): List<Post> {
+        override suspend fun getPosts(): NetworkResult<List<Post>> {
             calls++
             return result()
         }

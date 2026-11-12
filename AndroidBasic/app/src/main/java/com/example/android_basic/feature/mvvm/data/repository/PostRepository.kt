@@ -1,8 +1,9 @@
 package com.example.android_basic.feature.mvvm.data.repository
 
+import com.example.android_basic.core.network.NetworkResult
 import com.example.android_basic.feature.mvvm.data.model.Post
 
-/** ViewModel 只依赖数据入口，测试时可替换为假仓库。 */
+/** ViewModel 只依赖统一的数据结果，测试时可替换为假仓库；取消仍通过异常传播。 */
 interface PostRepository {
-    suspend fun getPosts(): List<Post>
+    suspend fun getPosts(): NetworkResult<List<Post>>
 }
