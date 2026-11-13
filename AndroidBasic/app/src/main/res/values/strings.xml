@@ -5,6 +5,9 @@
     <string name="mvvm_title">MVVM · 文章列表</string>
     <string name="mvvm_description">ViewModel + 协程 + LiveData + Retrofit\n真实网络请求，体验加载、刷新和失败重试。旋转屏幕后保留状态。</string>
     <string name="open_mvvm">打开 MVVM 示例</string>
+    <string name="mvvm_flow_title">MVVM · Flow 文章列表</string>
+    <string name="mvvm_flow_description">ViewModel + 协程 + StateFlow + Retrofit\n与 LiveData 示例对照，体验加载、刷新和失败重试。旋转屏幕后保留状态。</string>
+    <string name="open_mvvm_flow">打开 Flow 示例</string>
     <string name="posts_source">数据来自 JSONPlaceholder\nGET https://jsonplaceholder.typicode.com/posts</string>
     <string name="back">返回</string>
     <string name="refresh">刷新</string>

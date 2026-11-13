@@ -18,5 +18,8 @@ class MainActivity : AppCompatActivity() {
         binding.openMvvmButton.setOnClickListener {
             startActivity(Intent(this, PostListActivity::class.java))
         }
+        binding.openMvvmFlowButton.setOnClickListener {
+            startActivity(Intent(this, com.example.android_basic.feature.mvvmflow.ui.PostListActivity::class.java))
+        }
     }
 }

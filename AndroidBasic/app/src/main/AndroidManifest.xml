@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidBasic">
         <activity
+            android:name=".feature.mvvmflow.ui.PostListActivity"
+            android:exported="false" />
+        <activity
             android:name=".feature.mvvm.ui.PostListActivity"
             android:exported="false" />
         <activity
