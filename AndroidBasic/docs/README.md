@@ -1,6 +1,6 @@
 # Android / Kotlin 复习笔记
 
-整理日期：2026-11-12。根据 Kotlin 学习会话、协程学习会话中的问题、回答和项目实际代码整理，以问答、示例及易错点为主。
+最近整理日期：2026-11-13。根据 Kotlin、协程和 Flow 学习会话中的问题、回答及项目实际代码整理，以问答、示例及易错点为主。
 
 ## 阅读顺序
 
@@ -10,12 +10,14 @@
 | [Kotlin 特性](kotlin-features.md) | 属性与接口委托、函数类型、尾随 Lambda、作用域函数、闭包、接收者 Lambda 与 Compose、内联、函数引用 |
 | [Kotlin 泛型](kotlin-generics.md) | out / in、声明处与使用处的型变、星投影、泛型上界、where |
 | [Kotlin 协程](kotlin-coroutines.md) | 挂起与恢复、线程与调度器、任务与取消、并发作用域、统一网络异常、底层原理与共享数据；重点整理 withContext、async/await、coroutineScope |
+| [Kotlin Flow](kotlin-flow.md) | 冷流与热流、StateFlow / SharedFlow、生命周期、共享上游、常用操作符、回调转换、List 相等与状态更新、mvvmflow 项目流程 |
 
 ## 整理约定
 
 - 已排除明确标记“不记入”的独立知识点：安全调用 `?.`、Elvis 运算符 `?:`、`is` 与智能转换、`when` 表达式、扩展函数、Lambda 的返回与标签返回、数据类、解构、密封类型、单例对象、伴生对象、匿名对象。
 - 上述语法可能出现在其他知识点的代码中，但不再单独展开讲解。
 - 协程学习会话已整理到独立的 [Kotlin 协程](kotlin-coroutines.md) 笔记，已排除该会话中明确要求忽略的独立知识点；MVVM 笔记保留项目调用关系。
+- Flow 会话已整理到 [Kotlin Flow](kotlin-flow.md)，排除开始改代码前明确要求不记入的最初讲解；记录后来重新开始的正式复习与追问。旧 MVVM / 协程笔记中的“不使用 Flow”描述对应原 `feature.mvvm` 示例，新的 Flow 示例独立保存在 `feature.mvvmflow`。
 - 示例中的“编译错误”用于说明边界，不应直接复制到可运行代码中。
 - 笔记中的代码展开是理解语义的示意，不能视为编译器实际生成代码的逐字还原。
 
