@@ -31,6 +31,7 @@ class PostListActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.root.applySystemBarInsets()
 
+        // 新示例复用原 XML，这里单独设置标题，方便区分 LiveData / Flow 页面。
         binding.toolbar.setTitle(R.string.mvvm_flow_title)
         binding.toolbar.setNavigationOnClickListener { finish() }
         binding.postList.layoutManager = LinearLayoutManager(this)
@@ -38,9 +39,14 @@ class PostListActivity : AppCompatActivity() {
         binding.refreshButton.setOnClickListener { viewModel.loadPosts() }
         binding.retryButton.setOnClickListener { viewModel.loadPosts() }
 
-        // 页面不可见时取消收集；重新可见时收集最新状态，不重新发起请求。
+        // 与 LiveData 版不同：原来用 uiState.observe(this, ::render)，这里改用协程中的 collect。
+        // lifecycleScope 随 Activity 销毁而取消；页面停止时的收集取消由下面的 repeatOnLifecycle 处理。
         lifecycleScope.launch {
+            // 与 LiveData.observe 不同：collect 本身不会自动根据页面生命周期停止收集。
+            // 达到 STARTED 时启动内部收集协程；低于 STARTED 时取消它，恢复后重新启动。
+            // 只影响收集，ViewModel 在 viewModelScope 中发起的请求不会因此取消或重新执行。
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 每次开始收集先收到 StateFlow 的当前值，再接收后续变化；慢速收集可能跳过中间状态。
                 viewModel.uiState.collect { state ->
                     render(state)
                 }

@@ -12,8 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PostViewModel(private val repository: PostRepository) : ViewModel() {
+    // 与 LiveData 版不同：MutableLiveData 换成 MutableStateFlow；StateFlow 必须提供初始值。
     private val _uiState = MutableStateFlow<PostUiState>(PostUiState.Loading)
-    // 对外暴露只读状态，Activity 只能收集，不能修改。
+    // 与 LiveData 版不同：对外类型由 LiveData 换成 StateFlow，使用 asStateFlow() 暴露只读视图。
+    // 这里没有复制状态；Activity 通过 uiState 收集的仍然是 _uiState 的状态。
     val uiState: StateFlow<PostUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
@@ -27,6 +29,7 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         if (loadJob?.isActive == true) return
 
         loadJob = viewModelScope.launch {
+            // 与 LiveData 版不同：仍用 .value 赋值，但 StateFlow 按 equals 去重；相等时不重复通知。
             _uiState.value = PostUiState.Loading
             // Repository 统一处理请求异常，这里只将数据结果转换为页面状态。
             _uiState.value = when (val result = repository.getPosts()) {
