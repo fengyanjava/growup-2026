@@ -1,6 +1,6 @@
 # Android / Kotlin 复习笔记
 
-最近整理日期：2026-11-13。根据 Android、Kotlin、协程和 Flow 学习会话中的问题、回答及项目实际代码整理，以问答、示例及易错点为主。
+最近整理日期：2026-11-16。根据 Android、Kotlin、协程、Flow 和性能优化学习会话中的问题、回答及项目实际代码整理，以问答、示例及易错点为主。
 
 ## 阅读顺序
 
@@ -14,6 +14,7 @@
 | [Android 事件分发](android-touch-events.md) | 分发、拦截与消费、TouchTarget、CANCEL、Switch 滑动冲突与父子协调 |
 | [Android Handler](android-handler.md) | 消息执行链、Looper 等待与唤醒、View.post 宽高、同步屏障与异步消息、延迟消息与并发时序 |
 | [Android ANR](android-anr.md) | 系统现场记录、历史退出信息、上报流程、线程堆栈分析与常见修复方向 |
+| [Android 性能优化](android-performance-optimization.md) | 启动、包大小、内存、卡顿、异常监控；Trace、App Startup、Profile、Native Crash、ANR 与协程异常边界 |
 
 ## 整理约定
 
@@ -22,6 +23,7 @@
 - 协程学习会话已整理到独立的 [Kotlin 协程](kotlin-coroutines.md) 笔记，已排除该会话中明确要求忽略的独立知识点；MVVM 笔记保留项目调用关系。
 - Flow 会话已整理到 [Kotlin Flow](kotlin-flow.md)，排除开始改代码前明确要求不记入的最初讲解；记录后来重新开始的正式复习与追问。旧 MVVM / 协程笔记中的“不使用 Flow”描述对应原 `feature.mvvm` 示例，新的 Flow 示例独立保存在 `feature.mvvmflow`。
 - Android 面试复习会话已分为事件分发、Handler 和 ANR 三篇笔记；代码为教学示意，不表示项目新增了自定义 Switch 或 ANR 监控实现。仅提出但尚未讲解的“背压”未收录。
+- 性能优化会话已整理到 [Android 性能优化](android-performance-optimization.md)，排除本轮明确跳过的独立知识点；与原 ANR、协程笔记通过链接衔接，项目未新增监控或性能优化代码。
 - 示例中的“编译错误”用于说明边界，不应直接复制到可运行代码中。
 - 笔记中的代码展开是理解语义的示意，不能视为编译器实际生成代码的逐字还原。
 
