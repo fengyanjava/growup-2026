@@ -2,7 +2,7 @@
 
 按 Dart 基础、布局交互、状态异步、框架原理、性能优化、工程架构和实战逐步展开，共 74 题。每题先给出可用于面试口述的核心回答，再补充关键机制、适用场景或常见误区。
 
-框架机制的进一步说明见 [Flutter 核心机制面试笔记](flutter-basic.md)，异步和异常处理见 [Dart 异步与 Flutter 错误处理](dart-async-and-flutter-error-handling.md)。实际回答应结合自己的项目经历，不要把参考方案当成所有项目的唯一选择。
+框架机制的进一步说明见 [Flutter 核心机制面试笔记](flutter-basic.md)，异步和异常处理见 [Dart 异步与 Flutter 错误处理](dart-async-and-flutter-error-handling.md)，性能专题见 [Flutter 性能优化面试问答](flutter-performance-interview-notes.md)。实际回答应结合自己的项目经历，不要把参考方案当成所有项目的唯一选择。
 
 ## 一、入门：Dart 与 Flutter 基础
 
