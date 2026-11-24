@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun ArticleListRoute(
     onBack: () -> Unit,
+    onArticleSelected: (Int) -> Unit,
     viewModel: ArticleListViewModel = viewModel(),
 ) {
     // ViewModel 归属于文章页的导航条目，重组或旋转屏幕不会重复请求。
@@ -39,6 +40,7 @@ fun ArticleListRoute(
     ArticleListScreen(
         uiState = uiState,
         onBack = onBack,
+        onArticleSelected = onArticleSelected,
         onRetry = viewModel::loadArticles,
     )
 }
@@ -49,6 +51,7 @@ fun ArticleListScreen(
     uiState: ArticleListUiState,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    onArticleSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -98,8 +101,17 @@ fun ArticleListScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
+                            item {
+                                Text(
+                                    "点击文章，选择后返回首页",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
                             items(uiState.articles, key = { it.id }) { article ->
-                                Card(Modifier.fillMaxWidth()) {
+                                Card(
+                                    onClick = { onArticleSelected(article.id) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
                                     Column(
                                         modifier = Modifier.padding(16.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp),

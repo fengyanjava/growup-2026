@@ -27,7 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeContent(onOpenArticles: () -> Unit) {
+fun HomeContent(onOpenArticles: () -> Unit, selectedArticleId: Int?) {
     var count by rememberSaveable { mutableIntStateOf(0) }
 
     TabPage(title = "Home Screen") {
@@ -39,6 +39,10 @@ fun HomeContent(onOpenArticles: () -> Unit) {
         Button(onClick = onOpenArticles) {
             Text("文章列表")
         }
+        Text(
+            text = selectedArticleId?.let { "已选择文章 ID：$it" } ?: "尚未选择文章",
+            style = MaterialTheme.typography.bodyLarge,
+        )
     }
 }
 
