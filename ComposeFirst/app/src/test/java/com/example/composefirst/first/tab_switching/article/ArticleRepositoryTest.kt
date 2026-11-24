@@ -1,68 +1,122 @@
 package com.example.composefirst.first.tab_switching.article
 
-import com.sun.net.httpserver.HttpServer
+import com.example.composefirst.first.tab_switching.network.ApiClient
 import java.io.IOException
-import java.net.InetSocketAddress
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
+import okhttp3.Call
+import okhttp3.EventListener
+import okhttp3.OkHttpClient
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import retrofit2.HttpException
 
 class ArticleRepositoryTest {
-    private lateinit var server: HttpServer
+    private lateinit var server: MockWebServer
     private lateinit var repository: ArticleRepository
-    private var status = 200
-    private var response = "[]"
 
     @Before
     fun setUp() {
-        server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-        server.createContext("/posts") { exchange ->
-            val bytes = response.toByteArray(Charsets.UTF_8)
-            exchange.responseHeaders.add("Content-Type", "application/json; charset=utf-8")
-            exchange.sendResponseHeaders(status, bytes.size.toLong())
-            exchange.responseBody.use { it.write(bytes) }
-            exchange.close()
-        }
+        server = MockWebServer()
         server.start()
-        repository = ArticleRepository("http://127.0.0.1:${server.address.port}/posts")
+        val api = ApiClient.createRetrofit(server.url("/").toString())
+            .create(ArticleApi::class.java)
+        repository = ArticleRepository(api)
     }
 
     @After
     fun tearDown() {
-        server.stop(0)
+        server.shutdown()
     }
 
     @Test
     fun parsesArticlesAndIgnoresAdditionalFields() = runBlocking {
-        response = """
+        enqueueJson("""
             [{"id":1,"userId":2,"title":"文章标题","body":"第一行\n第二行","extra":true}]
-        """.trimIndent()
+        """.trimIndent())
 
         assertEquals(
             listOf(Article(1, 2, "文章标题", "第一行\n第二行")),
             repository.getArticles(),
         )
+        val request = server.takeRequest(5, TimeUnit.SECONDS)
+        assertNotNull(request)
+        assertEquals("GET", request!!.method)
+        assertEquals("/posts", request.path)
+        assertEquals("application/json", request.getHeader("Accept"))
     }
 
     @Test
     fun handlesEmptyList() = runBlocking {
+        enqueueJson("[]")
         assertEquals(emptyList<Article>(), repository.getArticles())
     }
 
-    @Test(expected = IOException::class)
+    @Test(expected = HttpException::class)
     fun rejectsHttpFailure(): Unit = runBlocking {
-        status = 503
-        repository.getArticles()
-        Unit
+        server.enqueue(MockResponse().setResponseCode(503))
+        try {
+            repository.getArticles()
+        } catch (error: HttpException) {
+            assertEquals(503, error.code())
+            throw error
+        }
     }
 
     @Test(expected = SerializationException::class)
     fun rejectsInvalidResponse(): Unit = runBlocking {
-        response = "not json"
+        enqueueJson("not json")
         repository.getArticles()
         Unit
+    }
+
+    @Test
+    fun cancellingCoroutineCancelsHttpCall() = runBlocking {
+        server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
+        val cancelled = CountDownLatch(1)
+        val client = OkHttpClient.Builder()
+            .eventListener(object : EventListener() {
+                override fun callFailed(call: Call, ioe: IOException) {
+                    if (call.isCanceled()) cancelled.countDown()
+                }
+            })
+            .build()
+        val api = ApiClient.createRetrofit(server.url("/").toString())
+            .newBuilder()
+            .client(client)
+            .build()
+            .create(ArticleApi::class.java)
+        val request = async(start = CoroutineStart.UNDISPATCHED) {
+            ArticleRepository(api).getArticles()
+        }
+        try {
+            assertNotNull(server.takeRequest(5, TimeUnit.SECONDS))
+            request.cancelAndJoin()
+            assertTrue("Underlying HTTP call should be cancelled", cancelled.await(5, TimeUnit.SECONDS))
+        } finally {
+            request.cancelAndJoin()
+            client.connectionPool.evictAll()
+            client.dispatcher.executorService.shutdown()
+        }
+    }
+
+    private fun enqueueJson(body: String) {
+        server.enqueue(
+            MockResponse()
+                .setHeader("Content-Type", "application/json; charset=utf-8")
+                .setBody(body),
+        )
     }
 }
