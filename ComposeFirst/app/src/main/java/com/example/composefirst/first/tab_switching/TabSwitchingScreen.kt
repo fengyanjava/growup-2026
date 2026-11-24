@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.composefirst.ui.theme.ComposeFirstTheme
 
 @Composable
-fun TabSwitchingScreen(modifier: Modifier = Modifier) {
+fun TabSwitchingScreen(onOpenArticles: () -> Unit, modifier: Modifier = Modifier) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.Home) }
     val stateHolder = rememberSaveableStateHolder()
 
@@ -33,7 +33,7 @@ fun TabSwitchingScreen(modifier: Modifier = Modifier) {
             // 按 Tab 分别保存 rememberSaveable 状态，页面无需一直留在 Composition 中。
             stateHolder.SaveableStateProvider(key = selectedTab.name) {
                 when (selectedTab) {
-                    MainTab.Home -> HomeContent()
+                    MainTab.Home -> HomeContent(onOpenArticles = onOpenArticles)
                     MainTab.Notification -> NotificationContent()
                     MainTab.Search -> SearchContent()
                     MainTab.Profile -> ProfileContent()
@@ -47,6 +47,6 @@ fun TabSwitchingScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun TabSwitchingScreenPreview() {
     ComposeFirstTheme {
-        TabSwitchingScreen()
+        TabSwitchingScreen(onOpenArticles = {})
     }
 }

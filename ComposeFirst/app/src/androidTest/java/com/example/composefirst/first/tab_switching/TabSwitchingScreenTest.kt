@@ -24,7 +24,7 @@ class TabSwitchingScreenTest {
     @Test
     fun switchingTabsRetainsEachTabsState() {
         composeRule.setContent {
-            ComposeFirstTheme { TabSwitchingScreen() }
+            ComposeFirstTheme { TabSwitchingScreen(onOpenArticles = {}) }
         }
 
         composeRule.onNodeWithText("加一").performClick()
@@ -51,7 +51,7 @@ class TabSwitchingScreenTest {
     fun restoringStateRestoresSelectedTabAndInactiveTabState() {
         val restorationTester = StateRestorationTester(composeRule)
         restorationTester.setContent {
-            ComposeFirstTheme { TabSwitchingScreen() }
+            ComposeFirstTheme { TabSwitchingScreen(onOpenArticles = {}) }
         }
 
         composeRule.onNodeWithText("加一").performClick()
@@ -68,5 +68,19 @@ class TabSwitchingScreenTest {
         composeRule.onNodeWithText("计数：1").assertIsDisplayed()
         composeRule.onNodeWithText("Search").performClick()
         composeRule.onNodeWithText("搜索关键词").assertTextContains("Kotlin")
+    }
+
+    @Test
+    fun returningFromArticlesRestoresHomeState() {
+        composeRule.setContent {
+            ComposeFirstTheme { TabSwitchingApp() }
+        }
+        composeRule.onNodeWithText("加一").performClick()
+        composeRule.onNodeWithText("文章列表").performClick()
+        composeRule.onNodeWithContentDescription("返回").assertIsDisplayed()
+        composeRule.onNodeWithText("Home").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("返回").performClick()
+        composeRule.onNodeWithText("计数：1").assertIsDisplayed()
+        composeRule.onNodeWithText("Home").assertIsSelected()
     }
 }

@@ -27,7 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeContent() {
+fun HomeContent(onOpenArticles: () -> Unit) {
     var count by rememberSaveable { mutableIntStateOf(0) }
 
     TabPage(title = "Home Screen") {
@@ -36,6 +36,9 @@ fun HomeContent() {
             Text("加一")
         }
         Text("增加计数后切换 Tab，再回来查看。")
+        Button(onClick = onOpenArticles) {
+            Text("文章列表")
+        }
     }
 }
 
