@@ -14,6 +14,7 @@ import com.example.composefirst.first.AlertDialogExample
 import com.example.composefirst.first.NestedListExample
 import com.example.composefirst.first.StatementExample
 import com.example.composefirst.first.navigation.NavGraph
+import com.example.composefirst.first.navigation_bar.NavBarNavigation
 import com.example.composefirst.ui.theme.ComposeFirstTheme
 
 class MainActivity : ComponentActivity() {
@@ -32,9 +33,9 @@ class MainActivity : ComponentActivity() {
 //                    AlertDialogExample()
 
 //                    NavGraph()
-                    NestedListExample()
+//                    NestedListExample()
 
-
+                    NavBarNavigation()
 
 
 
