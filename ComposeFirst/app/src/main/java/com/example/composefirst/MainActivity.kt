@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.composefirst.first.AlertDialogExample
 import com.example.composefirst.first.StatementExample
+import com.example.composefirst.first.navigation.NavGraph
 import com.example.composefirst.ui.theme.ComposeFirstTheme
 
 class MainActivity : ComponentActivity() {
@@ -27,7 +28,9 @@ class MainActivity : ComponentActivity() {
 //                    )
 //                    OutlinedTextFieldExample()
 //                    StatementExample()
-                    AlertDialogExample()
+//                    AlertDialogExample()
+
+                    NavGraph()
                 }
             }
         }
