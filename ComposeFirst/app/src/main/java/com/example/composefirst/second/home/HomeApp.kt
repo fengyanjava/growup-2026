@@ -3,7 +3,6 @@ package com.example.composefirst.second.home
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -29,9 +28,6 @@ fun HomeApp(modifier: Modifier = Modifier) {
 @Composable
 internal fun HomeNavigation(
     modifier: Modifier = Modifier,
-    homeContent: @Composable (NavBackStack<NavKey>) -> Unit = { backStack ->
-        HomeScreenUI(backStack = backStack)
-    },
 ) {
     val backStack = rememberNavBackStack(HomeDestination)
     NavDisplay(
@@ -48,7 +44,7 @@ internal fun HomeNavigation(
         ),
         entryProvider = entryProvider {
             entry<HomeDestination> {
-                homeContent(backStack)
+                HomeScreenUI(backStack = backStack)
             }
             entry<HomePickDestination> { destination ->
                 val resultBus = LocalResultEventBus.current
