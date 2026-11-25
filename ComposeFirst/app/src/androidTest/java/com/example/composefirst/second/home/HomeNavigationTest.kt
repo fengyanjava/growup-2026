@@ -1,14 +1,17 @@
 package com.example.composefirst.second.home
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -26,30 +29,9 @@ class HomeNavigationTest {
     @Test
     fun pickingAndCancellingOnlyUpdateTheCorrespondingItem() {
         var loadCount = 0
-        val repository = HomeRepository(object : HomeApi {
-            override suspend fun getArticles(offset: Int, limit: Int): List<HomeArticleInfo> {
-                loadCount++
-                return listOf(
-                    HomeArticleInfo(1, 1, "第一篇文章"),
-                    HomeArticleInfo(2, 1, "第二篇文章"),
-                )
-            }
-        })
-        val factory = viewModelFactory {
-            initializer { HomeViewModel(repository) }
-        }
+        val factory = createFactory { loadCount++ }
         composeRule.setContent {
-            ComposeFirstTheme {
-                HomeNavigation(
-                    homeContent = { controller, entry ->
-                        HomeScreenUI(
-                            navController = controller,
-                            backStackEntry = entry,
-                            viewModel = viewModel(viewModelStoreOwner = entry, factory = factory),
-                        )
-                    },
-                )
-            }
+            TestHomeNavigation(factory)
         }
 
         pickArticle(1)
@@ -77,6 +59,50 @@ class HomeNavigationTest {
         assertItemResult(1, "修改后的结果")
         assertItemResult(2, "第二项结果")
         composeRule.runOnIdle { assertEquals(1, loadCount) }
+    }
+
+    @Test
+    fun restoringStateRetainsPickerRouteAndDraft() {
+        val restorationTester = StateRestorationTester(composeRule)
+        val factory = createFactory()
+        restorationTester.setContent { TestHomeNavigation(factory) }
+
+        pickArticle(2)
+        composeRule.onNodeWithText("返回数据").performTextReplacement("尚未提交的结果")
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("当前文章 id：2").assertIsDisplayed()
+        composeRule.onNodeWithText("尚未提交的结果").assertIsDisplayed()
+        composeRule.onNodeWithText("确认并返回").performClick()
+        assertItemResult(2, "尚未提交的结果")
+        composeRule.onNodeWithText("id: 1").performScrollTo().assertIsDisplayed()
+    }
+
+    @Composable
+    private fun TestHomeNavigation(factory: ViewModelProvider.Factory) {
+        ComposeFirstTheme {
+            HomeNavigation(
+                homeContent = { backStack ->
+                    HomeScreenUI(
+                        backStack = backStack,
+                        viewModel = viewModel(factory = factory),
+                    )
+                },
+            )
+        }
+    }
+
+    private fun createFactory(onLoad: () -> Unit = {}): ViewModelProvider.Factory {
+        val repository = HomeRepository(object : HomeApi {
+            override suspend fun getArticles(offset: Int, limit: Int): List<HomeArticleInfo> {
+                onLoad()
+                return listOf(
+                    HomeArticleInfo(1, 1, "第一篇文章"),
+                    HomeArticleInfo(2, 1, "第二篇文章"),
+                )
+            }
+        })
+        return viewModelFactory { initializer { HomeViewModel(repository) } }
     }
 
     private fun pickArticle(id: Int) {

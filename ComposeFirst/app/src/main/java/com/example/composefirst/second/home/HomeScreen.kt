@@ -1,6 +1,5 @@
 package com.example.composefirst.second.home
 
-import android.os.Bundle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,43 +14,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filterNotNull
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.result.ResultEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenUI(
-    navController: NavHostController,
-    backStackEntry: NavBackStackEntry,
-    viewModel: HomeViewModel = viewModel(viewModelStoreOwner = backStackEntry),
+    backStack: NavBackStack<NavKey>,
+    viewModel: HomeViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val resultFlow = remember(backStackEntry) {
-        backStackEntry.savedStateHandle.getStateFlow<Bundle?>(HOME_PICK_RESULT, null)
-    }
-    LaunchedEffect(backStackEntry, viewModel) {
-        backStackEntry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            resultFlow.filterNotNull().collect { result ->
-                val value = result.getString(HOME_PICK_VALUE)
-                if (result.containsKey(HOME_PICK_ARTICLE_ID) && value != null) {
-                    viewModel.onArticlePicked(result.getInt(HOME_PICK_ARTICLE_ID), value)
-                }
-                // 消费后置空，保留 StateFlow 订阅，以便接收下一次结果。
-                backStackEntry.savedStateHandle.set<Bundle?>(HOME_PICK_RESULT, null)
-            }
-        }
+    // 接收模拟页回传的事件，由首页自己的 ViewModel 更新对应项。
+    ResultEffect<HomePickResult> { result ->
+        viewModel.onArticlePicked(result.articleId, result.value)
     }
     val listState = rememberLazyListState()
     Scaffold(
@@ -75,13 +57,13 @@ fun HomeScreenUI(
                         info = article,
                         pickedValue = uiState.pickedValues[article.id],
                         onPick = {
-                            navController.navigate(
-                                HomePickDestination(
-                                    articleId = article.id,
-                                    initialValue = uiState.pickedValues[article.id].orEmpty(),
+                            if (backStack.lastOrNull() == HomeDestination) {
+                                backStack.add(
+                                    HomePickDestination(
+                                        articleId = article.id,
+                                        initialValue = uiState.pickedValues[article.id].orEmpty(),
+                                    )
                                 )
-                            ) {
-                                launchSingleTop = true
                             }
                         },
                     )

@@ -1,25 +1,25 @@
 package com.example.composefirst.second.home
 
-import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.result.LocalResultEventBus
+import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal object HomeDestination
+internal data object HomeDestination : NavKey
 
 @Serializable
-internal data class HomePickDestination(val articleId: Int, val initialValue: String)
+internal data class HomePickDestination(val articleId: Int, val initialValue: String) : NavKey
 
-internal const val HOME_PICK_RESULT = "home_pick_result"
-internal const val HOME_PICK_ARTICLE_ID = "article_id"
-internal const val HOME_PICK_VALUE = "value"
+internal data class HomePickResult(val articleId: Int, val value: String)
 
 @Composable
 fun HomeApp(modifier: Modifier = Modifier) {
@@ -29,37 +29,43 @@ fun HomeApp(modifier: Modifier = Modifier) {
 @Composable
 internal fun HomeNavigation(
     modifier: Modifier = Modifier,
-    homeContent: @Composable (NavHostController, NavBackStackEntry) -> Unit = { controller, entry ->
-        HomeScreenUI(navController = controller, backStackEntry = entry)
+    homeContent: @Composable (NavBackStack<NavKey>) -> Unit = { backStack ->
+        HomeScreenUI(backStack = backStack)
     },
 ) {
-    val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = HomeDestination,
+    val backStack = rememberNavBackStack(HomeDestination)
+    NavDisplay(
+        backStack = backStack,
         modifier = modifier,
-    ) {
-        composable<HomeDestination> { entry ->
-            homeContent(navController, entry)
-        }
-        composable<HomePickDestination> { entry ->
-            val destination = entry.toRoute<HomePickDestination>()
-            HomePickScreen(
-                articleId = destination.articleId,
-                initialValue = destination.initialValue,
-                onBack = { navController.popBackStack() },
-                onConfirm = { value ->
-                    // 模拟页只向上一个页面回传结果，不访问首页 ViewModel。
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        HOME_PICK_RESULT,
-                        Bundle().apply {
-                            putInt(HOME_PICK_ARTICLE_ID, destination.articleId)
-                            putString(HOME_PICK_VALUE, value)
-                        },
-                    )
-                    navController.popBackStack()
-                },
-            )
-        }
-    }
+        onBack = {
+            if (backStack.size > 1) backStack.removeLastOrNull()
+        },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            // 为每个页面提供独立的 ViewModelStoreOwner，出栈后释放。
+            rememberViewModelStoreNavEntryDecorator(),
+            rememberResultEventBusNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<HomeDestination> {
+                homeContent(backStack)
+            }
+            entry<HomePickDestination> { destination ->
+                val resultBus = LocalResultEventBus.current
+                HomePickScreen(
+                    articleId = destination.articleId,
+                    initialValue = destination.initialValue,
+                    onBack = {
+                        if (backStack.lastOrNull() == destination) backStack.removeLastOrNull()
+                    },
+                    onConfirm = { value ->
+                        if (backStack.lastOrNull() == destination) {
+                            resultBus.sendResult(HomePickResult(destination.articleId, value))
+                            backStack.removeLastOrNull()
+                        }
+                    },
+                )
+            }
+        },
+    )
 }
