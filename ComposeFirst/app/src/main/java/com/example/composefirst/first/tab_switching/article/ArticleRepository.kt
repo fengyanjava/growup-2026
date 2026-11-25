@@ -1,10 +1,21 @@
 package com.example.composefirst.first.tab_switching.article
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.example.composefirst.first.tab_switching.network.ApiClient
+import kotlinx.coroutines.flow.Flow
 
 class ArticleRepository(
     private val api: ArticleApi = ApiClient.retrofit.create(ArticleApi::class.java),
 ) {
-    // Retrofit 的 suspend 接口负责异步请求、JSON 转换和协程取消，无需手动切换 IO 线程。
-    suspend fun getArticles(): List<Article> = api.getArticles()
+    fun getPagedArticles(): Flow<PagingData<Article>> = Pager(
+        config = PagingConfig(
+            pageSize = 20,
+            initialLoadSize = 20,
+            prefetchDistance = 5,
+            enablePlaceholders = false,
+        ),
+        pagingSourceFactory = { ArticlePagingSource(api) },
+    ).flow
 }

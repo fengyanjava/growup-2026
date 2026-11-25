@@ -23,17 +23,16 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.HttpException
 
-class ArticleRepositoryTest {
+class ArticleApiTest {
     private lateinit var server: MockWebServer
-    private lateinit var repository: ArticleRepository
+    private lateinit var api: ArticleApi
 
     @Before
     fun setUp() {
         server = MockWebServer()
         server.start()
-        val api = ApiClient.createRetrofit(server.url("/").toString())
+        api = ApiClient.createRetrofit(server.url("/").toString())
             .create(ArticleApi::class.java)
-        repository = ArticleRepository(api)
     }
 
     @After
@@ -49,26 +48,28 @@ class ArticleRepositoryTest {
 
         assertEquals(
             listOf(Article(1, 2, "文章标题", "第一行\n第二行")),
-            repository.getArticles(),
+            api.getArticles(offset = 0, limit = 20),
         )
         val request = server.takeRequest(5, TimeUnit.SECONDS)
         assertNotNull(request)
         assertEquals("GET", request!!.method)
-        assertEquals("/posts", request.path)
+        assertEquals("/posts", request.requestUrl!!.encodedPath)
+        assertEquals("0", request.requestUrl!!.queryParameter("_start"))
+        assertEquals("20", request.requestUrl!!.queryParameter("_limit"))
         assertEquals("application/json", request.getHeader("Accept"))
     }
 
     @Test
     fun handlesEmptyList() = runBlocking {
         enqueueJson("[]")
-        assertEquals(emptyList<Article>(), repository.getArticles())
+        assertEquals(emptyList<Article>(), api.getArticles(offset = 0, limit = 20))
     }
 
     @Test(expected = HttpException::class)
     fun rejectsHttpFailure(): Unit = runBlocking {
         server.enqueue(MockResponse().setResponseCode(503))
         try {
-            repository.getArticles()
+            api.getArticles(offset = 0, limit = 20)
         } catch (error: HttpException) {
             assertEquals(503, error.code())
             throw error
@@ -78,7 +79,7 @@ class ArticleRepositoryTest {
     @Test(expected = SerializationException::class)
     fun rejectsInvalidResponse(): Unit = runBlocking {
         enqueueJson("not json")
-        repository.getArticles()
+        api.getArticles(offset = 0, limit = 20)
         Unit
     }
 
@@ -99,7 +100,7 @@ class ArticleRepositoryTest {
             .build()
             .create(ArticleApi::class.java)
         val request = async(start = CoroutineStart.UNDISPATCHED) {
-            ArticleRepository(api).getArticles()
+            api.getArticles(offset = 0, limit = 20)
         }
         try {
             assertNotNull(server.takeRequest(5, TimeUnit.SECONDS))
