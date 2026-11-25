@@ -82,9 +82,8 @@ class HomeNavigationTest {
     private fun TestHomeNavigation(factory: ViewModelProvider.Factory) {
         ComposeFirstTheme {
             HomeNavigation(
-                homeContent = { backStack ->
+                homeContent = {
                     HomeScreenUI(
-                        backStack = backStack,
                         viewModel = viewModel(factory = factory),
                     )
                 },

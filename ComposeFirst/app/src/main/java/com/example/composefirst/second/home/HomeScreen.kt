@@ -20,16 +20,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.result.ResultEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenUI(
-    backStack: NavBackStack<NavKey>,
     viewModel: HomeViewModel = viewModel(),
 ) {
+    val backStack = LocalHomeNavigator.current.backStack
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // 接收模拟页回传的事件，由首页自己的 ViewModel 更新对应项。
     ResultEffect<HomePickResult> { result ->

@@ -19,15 +19,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.result.LocalResultEventBus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePickScreen(
     articleId: Int,
     initialValue: String,
-    onBack: () -> Unit,
-    onConfirm: (String) -> Unit,
 ) {
+    val backStack = LocalHomeNavigator.current.backStack
+    val resultBus = LocalResultEventBus.current
+    val destination = HomePickDestination(articleId, initialValue)
+    val onBack: () -> Unit = {
+        if (backStack.lastOrNull() == destination) backStack.removeLastOrNull()
+    }
     var value by rememberSaveable(articleId, initialValue) {
         mutableStateOf(initialValue.ifEmpty { "模拟数据 $articleId" })
     }
@@ -54,7 +59,12 @@ fun HomePickScreen(
                 singleLine = true,
             )
             Button(
-                onClick = { onConfirm(value.trim()) },
+                onClick = {
+                    if (backStack.lastOrNull() == destination) {
+                        resultBus.sendResult(HomePickResult(articleId, value.trim()))
+                        backStack.removeLastOrNull()
+                    }
+                },
                 enabled = value.isNotBlank(),
             ) { Text("确认并返回") }
             TextButton(onClick = onBack) { Text("取消") }

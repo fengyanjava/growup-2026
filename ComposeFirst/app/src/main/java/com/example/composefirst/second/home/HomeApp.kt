@@ -1,13 +1,14 @@
 package com.example.composefirst.second.home
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
@@ -28,40 +29,34 @@ fun HomeApp(modifier: Modifier = Modifier) {
 @Composable
 internal fun HomeNavigation(
     modifier: Modifier = Modifier,
+    homeContent: @Composable () -> Unit = { HomeScreenUI() },
 ) {
     val backStack = rememberNavBackStack(HomeDestination)
-    NavDisplay(
-        backStack = backStack,
-        modifier = modifier,
-        onBack = {
-            if (backStack.size > 1) backStack.removeLastOrNull()
-        },
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            // 为每个页面提供独立的 ViewModelStoreOwner，出栈后释放。
-            rememberViewModelStoreNavEntryDecorator(),
-            rememberResultEventBusNavEntryDecorator(),
-        ),
-        entryProvider = entryProvider {
-            entry<HomeDestination> {
-                HomeScreenUI(backStack = backStack)
-            }
-            entry<HomePickDestination> { destination ->
-                val resultBus = LocalResultEventBus.current
-                HomePickScreen(
-                    articleId = destination.articleId,
-                    initialValue = destination.initialValue,
-                    onBack = {
-                        if (backStack.lastOrNull() == destination) backStack.removeLastOrNull()
-                    },
-                    onConfirm = { value ->
-                        if (backStack.lastOrNull() == destination) {
-                            resultBus.sendResult(HomePickResult(destination.articleId, value))
-                            backStack.removeLastOrNull()
-                        }
-                    },
-                )
-            }
-        },
-    )
+    val navigator = remember(backStack) { HomeNavigator(backStack) }
+    CompositionLocalProvider(LocalHomeNavigator provides navigator) {
+        NavDisplay(
+            backStack = backStack,
+            modifier = modifier,
+            onBack = {
+                if (backStack.size > 1) backStack.removeLastOrNull()
+            },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                // 为每个页面提供独立的 ViewModelStoreOwner，出栈后释放。
+                rememberViewModelStoreNavEntryDecorator(),
+                rememberResultEventBusNavEntryDecorator(),
+            ),
+            entryProvider = entryProvider {
+                entry<HomeDestination> {
+                    homeContent()
+                }
+                entry<HomePickDestination> { destination ->
+                    HomePickScreen(
+                        articleId = destination.articleId,
+                        initialValue = destination.initialValue,
+                    )
+                }
+            },
+        )
+    }
 }
