@@ -6,11 +6,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
-
-    private val api = HomeRepository()
+class HomeViewModel(
+    private val api: HomeRepository = HomeRepository(),
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -18,6 +19,16 @@ class HomeViewModel : ViewModel() {
 
     init {
         loadData()
+    }
+
+    fun onArticlePicked(articleId: Int, value: String) {
+        _uiState.update { current ->
+            if (current.articles.none { it.id == articleId }) {
+                current
+            } else {
+                current.copy(pickedValues = current.pickedValues + (articleId to value))
+            }
+        }
     }
 
     fun loadData() {

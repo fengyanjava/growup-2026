@@ -3,6 +3,7 @@ package com.example.composefirst.second.home
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -21,24 +22,27 @@ class FlowPageContainerTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun changingRememberedStateReplacesVisiblePage() {
-        lateinit var state: FlowPageContainerState
+    fun changingExternalStateReplacesVisiblePage() {
+        val state = mutableStateOf(FlowPageContainerViewState.Loading)
         composeRule.setContent {
-            state = rememberPageContainerState()
             ComposeFirstTheme {
-
+                FlowPageContainer(
+                    modifier = Modifier.fillMaxSize(),
+                    viewState = state.value,
+                    loadingContent = { Text("正在加载") },
+                ) { Text("文章列表") }
             }
         }
 
         composeRule.onNodeWithText("正在加载").assertIsDisplayed()
         composeRule.onNodeWithText("文章列表").assertDoesNotExist()
-        composeRule.runOnIdle { state.state = FlowPageContainerViewState.Content }
+        composeRule.runOnIdle { state.value = FlowPageContainerViewState.Content }
         composeRule.onNodeWithText("文章列表").assertIsDisplayed()
         composeRule.onNodeWithText("正在加载").assertDoesNotExist()
-        composeRule.runOnIdle { state.state = FlowPageContainerViewState.Empty }
+        composeRule.runOnIdle { state.value = FlowPageContainerViewState.Empty }
         composeRule.onNodeWithText("暂无数据").assertIsDisplayed()
         composeRule.onNodeWithText("文章列表").assertDoesNotExist()
-        composeRule.runOnIdle { state.state = FlowPageContainerViewState.Error }
+        composeRule.runOnIdle { state.value = FlowPageContainerViewState.Error }
         composeRule.onNodeWithText("加载失败").assertIsDisplayed()
         composeRule.onNodeWithText("暂无数据").assertDoesNotExist()
         composeRule.onNodeWithText("重试").assertDoesNotExist()
@@ -46,18 +50,22 @@ class FlowPageContainerTest {
 
     @Test
     fun retryNotifiesCallerWithoutChangingPageState() {
-        val state = FlowPageContainerState(FlowPageContainerViewState.Error)
+        val state = FlowPageContainerViewState.Error
         var retryCount = 0
         composeRule.setContent {
             ComposeFirstTheme {
-
+                FlowPageContainer(
+                    modifier = Modifier.fillMaxSize(),
+                    viewState = state,
+                    onRetry = { retryCount++ },
+                ) { Text("文章列表") }
             }
         }
 
         composeRule.onNodeWithText("重试").performClick()
         composeRule.runOnIdle {
             assertEquals(1, retryCount)
-            assertEquals(FlowPageContainerViewState.Error, state.state)
+            assertEquals(FlowPageContainerViewState.Error, state)
         }
         composeRule.onNodeWithText("加载失败").assertIsDisplayed()
     }
