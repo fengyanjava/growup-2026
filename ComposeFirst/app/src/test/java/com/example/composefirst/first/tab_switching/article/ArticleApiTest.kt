@@ -1,6 +1,6 @@
 package com.example.composefirst.first.tab_switching.article
 
-import com.example.composefirst.first.tab_switching.network.ApiClient
+import com.example.composefirst.network.ApiClient
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

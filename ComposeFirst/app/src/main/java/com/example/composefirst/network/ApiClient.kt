@@ -1,4 +1,4 @@
-package com.example.composefirst.first.tab_switching.network
+package com.example.composefirst.network
 
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json

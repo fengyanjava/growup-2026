@@ -3,7 +3,7 @@ package com.example.composefirst.first.tab_switching.article
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.example.composefirst.first.tab_switching.network.ApiClient
+import com.example.composefirst.network.ApiClient
 import kotlinx.coroutines.flow.Flow
 
 class ArticleRepository(

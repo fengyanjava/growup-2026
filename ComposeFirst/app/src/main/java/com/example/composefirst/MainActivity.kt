@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.composefirst.first.tab_switching.TabSwitchingApp
+import com.example.composefirst.second.home.HomeScreenUI
 import com.example.composefirst.ui.theme.ComposeFirstTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +30,12 @@ class MainActivity : ComponentActivity() {
 //                    NestedListExample()
 
 //                    NavBarNavigation()
-                TabSwitchingApp()
+//                TabSwitchingApp()
+
+                HomeScreenUI()
+
+
+
             }
         }
     }
